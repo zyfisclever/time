@@ -1,4 +1,4 @@
-# LunaDial Classic
+# Web Time
 
 一个简洁优雅的网页时钟应用，显示日期和时间，支持深色/浅色主题切换和 12/24 小时制切换。
 
@@ -13,17 +13,8 @@
 
 ## 使用方法
 
-直接在浏览器中打开 `index.html` 文件即可使用。
-
-```bash
-# 或者使用本地服务器
-python -m http.server 8000
-# 然后访问 http://localhost:8000
-```
-
-## 在线演示
-
-访问 GitHub Pages 网站：[https://zyfisclever.github.io/time/](https://zyfisclever.github.io/time/)
+- git clone `index.html` 文件即可使用。
+- GitHub Pages：[https://zyfisclever.github.io/time/](https://zyfisclever.github.io/time/)
 
 ## 技术栈
 
