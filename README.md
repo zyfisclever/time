@@ -21,6 +21,10 @@ python -m http.server 8000
 # 然后访问 http://localhost:8000
 ```
 
+## 在线演示
+
+访问 GitHub Pages 网站：[https://zyfisclever.github.io/time/](https://zyfisclever.github.io/time/)
+
 ## 技术栈
 
 - HTML5
