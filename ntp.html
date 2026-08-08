@@ -233,40 +233,23 @@
             return (num < 10 ? '0' : '') + num;
         }
 
-        // 从 timeapi.io 获取网络时间
+        // 从 worldclockapi.com 获取网络时间（UTC）
         async function fetchNtpTime() {
             try {
-                var response = await fetch('https://timeapi.io/api/Time/current/zone?timeZone=Asia/Shanghai');
+                var response = await fetch('http://worldclockapi.com/api/json/utc/now');
                 if (!response.ok) throw new Error('HTTP ' + response.status);
                 var data = await response.json();
                 
-                // 使用 API 返回的结构化字段构造时间（避免 dateTime 字符串的时区解析问题）
-                // 注意：API 返回的是 Asia/Shanghai 时区的时间
-                // 我们需要构造一个 UTC 时间戳，然后计算与本地时间的偏移
-                
-                // 方法：用 Date.UTC 构造一个"假装是 UTC"的时间，然后加上时区偏移
-                // Asia/Shanghai 是 UTC+8
-                var utcMs = Date.UTC(
-                    data.year,
-                    data.month - 1,  // month 是 1-12，Date.UTC 需要 0-11
-                    data.day,
-                    data.hour,
-                    data.minute,
-                    data.seconds,
-                    data.milliSeconds || 0
-                );
-                
-                // Asia/Shanghai 时区偏移 = +8 小时
-                var shanghaiOffsetMs = 8 * 60 * 60 * 1000;
-                // 真实的 UTC 时间戳
-                var realUtcMs = utcMs - shanghaiOffsetMs;
+                // worldclockapi.com 返回的 currentDateTime 是标准 ISO 格式，带 Z 后缀（UTC）
+                // 例如："2026-08-08T08:41Z"
+                var ntpTime = new Date(data.currentDateTime);
                 
                 // 计算本地时间与网络时间的偏移
                 var localTime = new Date();
-                ntpOffset = realUtcMs - localTime.getTime();
+                ntpOffset = ntpTime.getTime() - localTime.getTime();
                 ntpSynced = true;
                 
-                document.getElementById('ntp-status').innerHTML = '✅ 已同步网络时间 (timeapi.io)';
+                document.getElementById('ntp-status').innerHTML = '✅ 已同步网络时间 (worldclockapi.com)';
                 document.getElementById('ntp-status').style.color = '#4caf50';
                 
                 // 立即更新时间显示
