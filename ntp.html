@@ -197,6 +197,7 @@
         <button class="control-btn" id="hour-format-toggle">24H</button>
         <button class="control-btn" id="theme-toggle">🌙</button>
         <button class="control-btn" id="bg-upload-btn">🖼️ 背景</button>
+        <button class="control-btn" id="bg-clear-btn">🗑️ 清除</button>
         <button class="control-btn" id="blur-toggle">模糊: 关</button>
     </div>
 
@@ -338,6 +339,23 @@
             reader.readAsDataURL(file);
         }
 
+        // 清除背景图片
+        function clearBackground() {
+            var bgLayer = document.getElementById('bg-layer');
+            bgLayer.style.backgroundImage = 'none';
+            
+            // 清除 localStorage 中的背景
+            localStorage.removeItem('bgImage');
+            
+            // 同时关闭模糊
+            if (isBlurred) {
+                isBlurred = false;
+                bgLayer.classList.remove('blurred');
+                document.getElementById('blur-toggle').innerHTML = '模糊: 关';
+                localStorage.setItem('blur', 'off');
+            }
+        }
+
         // 切换高斯模糊
         function toggleBlur() {
             isBlurred = !isBlurred;
@@ -399,6 +417,9 @@
             });
             
             document.getElementById('bg-file-input').addEventListener('change', handleBgUpload);
+            
+            // 清除背景按钮
+            document.getElementById('bg-clear-btn').addEventListener('click', clearBackground);
             
             document.getElementById('blur-toggle').addEventListener('click', toggleBlur);
         }
