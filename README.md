@@ -9,13 +9,15 @@
 - 🕑 12/24 小时制切换
 - 🖼️ **自定义背景**：上传任意图片作为背景（AI 分支新增）
 - 🌫️ **高斯模糊开关**：一键切换背景模糊效果（AI 分支新增）
+- 🌐 **NTP 网络时间**：`ntp.html` 使用 timeapi.io 同步网络时间（AI 分支新增）
 - 📱 响应式设计，适配不同屏幕尺寸
 - 💾 本地存储用户偏好设置（主题、小时制、背景、模糊状态）
 - 🔍 浏览器兼容性检测
 
 ## 使用方法
 
-- git clone `index.html` 文件即可使用。
+- `index.html`：使用本地时间
+- `ntp.html`：使用 timeapi.io 网络时间（NTP 同步）
 - GitHub Pages：[https://zyfisclever.github.io/time/](https://zyfisclever.github.io/time/)
 
 ## 技术栈
