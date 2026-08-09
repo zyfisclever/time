@@ -34,9 +34,14 @@
             background-size: contain;
             background-position: center;
             background-repeat: no-repeat;
-            background-color: #000;
+            background-color: #f5f5f5; /* 默认浅色背景 */
             z-index: -2;
-            transition: filter 0.3s ease;
+            transition: filter 0.3s ease, background-color 0.3s ease;
+        }
+
+        /* 深色主题时背景层为深色 */
+        .dark .bg-layer {
+            background-color: #1a1a1a;
         }
 
         /* 内容遮罩层 - 提高文字可读性 */
@@ -150,18 +155,41 @@
             color: #f5f5f5;
         }
 
-        /* Modal popup style */
+        /* Modal popup style - 适配主题 */
         #browser-check-modal {
             display: none;
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background-color: white;
+            background-color: #ffffff;
+            color: #1a1a1a;
             padding: 2rem;
             border-radius: 0.5rem;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             z-index: 1000;
+        }
+
+        /* 深色主题时弹窗为深色 */
+        .dark #browser-check-modal {
+            background-color: #1a1a1a;
+            color: #f5f5f5;
+        }
+
+        /* 弹窗内关闭按钮适配主题 */
+        #close-modal {
+            margin-top: 1rem;
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            background-color: #e0e0e0;
+            color: #333;
+        }
+
+        .dark #close-modal {
+            background-color: #333;
+            color: #f5f5f5;
         }
 
         /* Modal overlay style */
@@ -432,7 +460,7 @@
             // 恢复默认遮罩
             document.getElementById('content-overlay').style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
             
-            // 恢复主题
+            // 恢复主题（背景层颜色会跟随主题自动变化）
             initTheme();
         }
 
