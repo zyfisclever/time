@@ -228,6 +228,8 @@
         var ntpOffset = 0;
         // 是否已同步 NTP
         var ntpSynced = false;
+        // 是否使用自动适应背景颜色
+        var autoAdapt = true;
 
         // Function to pad numbers with leading zeros
         function padZero(num) {
@@ -319,6 +321,73 @@
             updateClock();
         }
 
+        // 分析图片颜色，自动调整文字颜色和遮罩
+        function analyzeBackgroundColor(imageUrl) {
+            var img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = function() {
+                try {
+                    // 创建 Canvas 读取像素
+                    var canvas = document.createElement('canvas');
+                    var size = 50; // 缩小到 50x50 提高性能
+                    canvas.width = size;
+                    canvas.height = size;
+                    var ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, size, size);
+                    
+                    var imageData = ctx.getImageData(0, 0, size, size);
+                    var pixels = imageData.data;
+                    
+                    // 随机选取 10 个点
+                    var darkCount = 0;
+                    var lightCount = 0;
+                    var totalBrightness = 0;
+                    
+                    for (var i = 0; i < 10; i++) {
+                        var idx = Math.floor(Math.random() * (size * size)) * 4;
+                        var r = pixels[idx];
+                        var g = pixels[idx + 1];
+                        var b = pixels[idx + 2];
+                        var a = pixels[idx + 3];
+                        
+                        // 跳过透明像素
+                        if (a < 128) continue;
+                        
+                        // 计算亮度（加权公式）
+                        var brightness = (0.299 * r + 0.587 * g + 0.114 * b);
+                        totalBrightness += brightness;
+                        
+                        if (brightness < 128) {
+                            darkCount++;
+                        } else {
+                            lightCount++;
+                        }
+                    }
+                    
+                    var avgBrightness = totalBrightness / 10;
+                    
+                    // 根据背景亮度调整文字颜色和遮罩
+                    var body = document.body;
+                    var overlay = document.getElementById('content-overlay');
+                    
+                    if (avgBrightness < 128) {
+                        // 背景偏暗 → 文字用浅色
+                        body.classList.remove('light');
+                        body.classList.add('dark');
+                        overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.2)';
+                    } else {
+                        // 背景偏亮 → 文字用深色
+                        body.classList.remove('dark');
+                        body.classList.add('light');
+                        overlay.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+                    }
+                } catch (err) {
+                    console.log('背景颜色分析失败:', err);
+                }
+            };
+            img.src = imageUrl;
+        }
+
         // 上传背景图片
         function handleBgUpload(event) {
             var file = event.target.files[0];
@@ -334,6 +403,11 @@
                     localStorage.setItem('bgImage', bgUrl);
                 } catch (err) {
                     console.log('背景图片过大，无法保存到本地存储');
+                }
+                
+                // 自动分析背景颜色并调整文字
+                if (autoAdapt) {
+                    analyzeBackgroundColor(bgUrl);
                 }
             };
             reader.readAsDataURL(file);
@@ -354,6 +428,12 @@
                 document.getElementById('blur-toggle').innerHTML = '模糊: 关';
                 localStorage.setItem('blur', 'off');
             }
+            
+            // 恢复默认遮罩
+            document.getElementById('content-overlay').style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
+            
+            // 恢复主题
+            initTheme();
         }
 
         // 切换高斯模糊
@@ -379,6 +459,11 @@
             if (savedBg) {
                 var bgLayer = document.getElementById('bg-layer');
                 bgLayer.style.backgroundImage = 'url(' + savedBg + ')';
+                
+                // 分析保存的背景颜色
+                if (autoAdapt) {
+                    analyzeBackgroundColor(savedBg);
+                }
             }
 
             var savedBlur = localStorage.getItem('blur');
