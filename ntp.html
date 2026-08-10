@@ -128,6 +128,73 @@
             padding: 0;
         }
 
+        /* 折叠菜单容器 */
+        .menu-container {
+            position: relative;
+        }
+
+        /* 折叠菜单按钮 */
+        #menu-toggle {
+            width: 3rem;
+            padding: 0;
+        }
+
+        /* 折叠菜单下拉面板 */
+        .menu-dropdown {
+            display: none;
+            position: absolute;
+            top: 2rem;
+            right: 0;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 0.5rem;
+            z-index: 100;
+            min-width: 8rem;
+        }
+
+        .dark .menu-dropdown {
+            background-color: rgba(26, 26, 26, 0.95);
+        }
+
+        .menu-dropdown.show {
+            display: block;
+        }
+
+        /* 下拉菜单中的按钮 */
+        .menu-item {
+            display: block;
+            width: 100%;
+            height: 2rem;
+            border: none;
+            border-radius: 0.3rem;
+            cursor: pointer;
+            background-color: transparent;
+            color: #333;
+            font-size: 0.85rem;
+            text-align: left;
+            padding: 0 0.8rem;
+            margin-bottom: 0.2rem;
+            white-space: nowrap;
+            transition: background-color 0.2s;
+        }
+
+        .menu-item:hover {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .dark .menu-item {
+            color: #f5f5f5;
+        }
+
+        .dark .menu-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .menu-item:last-child {
+            margin-bottom: 0;
+        }
+
         /* AM/PM small font style */
         .ampm {
             font-size: 6vw;
@@ -224,9 +291,15 @@
     <div class="controls-right">
         <button class="control-btn" id="hour-format-toggle">24H</button>
         <button class="control-btn" id="theme-toggle">🌙</button>
-        <button class="control-btn" id="bg-upload-btn">🖼️ 背景</button>
-        <button class="control-btn" id="bg-clear-btn">🗑️ 清除</button>
-        <button class="control-btn" id="blur-toggle">模糊: 关</button>
+        <!-- 折叠菜单 -->
+        <div class="menu-container">
+            <button class="control-btn" id="menu-toggle">⚙️</button>
+            <div class="menu-dropdown" id="menu-dropdown">
+                <button class="menu-item" id="bg-upload-btn">🖼️ 上传背景</button>
+                <button class="menu-item" id="bg-clear-btn">🗑️ 清除背景</button>
+                <button class="menu-item" id="blur-toggle">🌫️ 模糊: 关</button>
+            </div>
+        </div>
     </div>
 
     <!-- 隐藏的文件上传输入 -->
@@ -271,11 +344,8 @@
                 if (!response.ok) throw new Error('HTTP ' + response.status);
                 var data = await response.json();
                 
-                // worldclockapi.com 返回的 currentDateTime 是标准 ISO 格式，带 Z 后缀（UTC）
-                // 例如："2026-08-08T08:41Z"
                 var ntpTime = new Date(data.currentDateTime);
                 
-                // 计算本地时间与网络时间的偏移
                 var localTime = new Date();
                 ntpOffset = ntpTime.getTime() - localTime.getTime();
                 ntpSynced = true;
@@ -283,7 +353,6 @@
                 document.getElementById('ntp-status').innerHTML = '✅ 已同步网络时间 (worldclockapi.com)';
                 document.getElementById('ntp-status').style.color = '#4caf50';
                 
-                // 立即更新时间显示
                 updateClock();
             } catch (err) {
                 console.error('NTP 同步失败:', err);
@@ -349,15 +418,28 @@
             updateClock();
         }
 
+        // 切换折叠菜单
+        function toggleMenu() {
+            var dropdown = document.getElementById('menu-dropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // 点击其他地方关闭菜单
+        document.addEventListener('click', function(e) {
+            var container = document.querySelector('.menu-container');
+            if (!container.contains(e.target)) {
+                document.getElementById('menu-dropdown').classList.remove('show');
+            }
+        });
+
         // 分析图片颜色，自动调整文字颜色和遮罩
         function analyzeBackgroundColor(imageUrl) {
             var img = new Image();
             img.crossOrigin = 'anonymous';
             img.onload = function() {
                 try {
-                    // 创建 Canvas 读取像素
                     var canvas = document.createElement('canvas');
-                    var size = 50; // 缩小到 50x50 提高性能
+                    var size = 50;
                     canvas.width = size;
                     canvas.height = size;
                     var ctx = canvas.getContext('2d');
@@ -366,7 +448,6 @@
                     var imageData = ctx.getImageData(0, 0, size, size);
                     var pixels = imageData.data;
                     
-                    // 随机选取 10 个点
                     var darkCount = 0;
                     var lightCount = 0;
                     var totalBrightness = 0;
@@ -378,10 +459,8 @@
                         var b = pixels[idx + 2];
                         var a = pixels[idx + 3];
                         
-                        // 跳过透明像素
                         if (a < 128) continue;
                         
-                        // 计算亮度（加权公式）
                         var brightness = (0.299 * r + 0.587 * g + 0.114 * b);
                         totalBrightness += brightness;
                         
@@ -394,17 +473,14 @@
                     
                     var avgBrightness = totalBrightness / 10;
                     
-                    // 根据背景亮度调整文字颜色和遮罩
                     var body = document.body;
                     var overlay = document.getElementById('content-overlay');
                     
                     if (avgBrightness < 128) {
-                        // 背景偏暗 → 文字用浅色
                         body.classList.remove('light');
                         body.classList.add('dark');
                         overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.2)';
                     } else {
-                        // 背景偏亮 → 文字用深色
                         body.classList.remove('dark');
                         body.classList.add('light');
                         overlay.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
@@ -433,7 +509,6 @@
                     console.log('背景图片过大，无法保存到本地存储');
                 }
                 
-                // 自动分析背景颜色并调整文字
                 if (autoAdapt) {
                     analyzeBackgroundColor(bgUrl);
                 }
@@ -446,21 +521,17 @@
             var bgLayer = document.getElementById('bg-layer');
             bgLayer.style.backgroundImage = 'none';
             
-            // 清除 localStorage 中的背景
             localStorage.removeItem('bgImage');
             
-            // 同时关闭模糊
             if (isBlurred) {
                 isBlurred = false;
                 bgLayer.classList.remove('blurred');
-                document.getElementById('blur-toggle').innerHTML = '模糊: 关';
+                document.getElementById('blur-toggle').innerHTML = '🌫️ 模糊: 关';
                 localStorage.setItem('blur', 'off');
             }
             
-            // 恢复默认遮罩
             document.getElementById('content-overlay').style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
             
-            // 恢复主题（背景层颜色会跟随主题自动变化）
             initTheme();
         }
 
@@ -472,10 +543,10 @@
             
             if (isBlurred) {
                 bgLayer.classList.add('blurred');
-                button.innerHTML = '模糊: 开';
+                button.innerHTML = '🌫️ 模糊: 开';
             } else {
                 bgLayer.classList.remove('blurred');
-                button.innerHTML = '模糊: 关';
+                button.innerHTML = '🌫️ 模糊: 关';
             }
             
             localStorage.setItem('blur', isBlurred ? 'on' : 'off');
@@ -488,7 +559,6 @@
                 var bgLayer = document.getElementById('bg-layer');
                 bgLayer.style.backgroundImage = 'url(' + savedBg + ')';
                 
-                // 分析保存的背景颜色
                 if (autoAdapt) {
                     analyzeBackgroundColor(savedBg);
                 }
@@ -498,7 +568,7 @@
             if (savedBlur === 'on') {
                 isBlurred = true;
                 document.getElementById('bg-layer').classList.add('blurred');
-                document.getElementById('blur-toggle').innerHTML = '模糊: 开';
+                document.getElementById('blur-toggle').innerHTML = '🌫️ 模糊: 开';
             }
         }
 
@@ -525,14 +595,19 @@
             document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
             document.getElementById('hour-format-toggle').addEventListener('click', toggleHourFormat);
             
+            document.getElementById('menu-toggle').addEventListener('click', toggleMenu);
+            
             document.getElementById('bg-upload-btn').addEventListener('click', function() {
                 document.getElementById('bg-file-input').click();
+                document.getElementById('menu-dropdown').classList.remove('show');
             });
             
             document.getElementById('bg-file-input').addEventListener('change', handleBgUpload);
             
-            // 清除背景按钮
-            document.getElementById('bg-clear-btn').addEventListener('click', clearBackground);
+            document.getElementById('bg-clear-btn').addEventListener('click', function() {
+                clearBackground();
+                document.getElementById('menu-dropdown').classList.remove('show');
+            });
             
             document.getElementById('blur-toggle').addEventListener('click', toggleBlur);
         }
@@ -633,7 +708,6 @@
                 results.push("用户配置存储: 错误 - " + e.message);
             }
 
-            // NTP 状态
             results.push("NTP 时间同步: " + (ntpSynced ? "已同步" : "未同步"));
 
             var testResultsContainer = document.getElementById('test-results');
@@ -647,13 +721,10 @@
             initBackground();
             initEvent();
             
-            // 先显示本地时间，然后尝试同步 NTP
             updateClock();
             setInterval(updateClock, 1000);
             
-            // 同步网络时间
             fetchNtpTime();
-            // 每 5 分钟重新同步一次
             setInterval(fetchNtpTime, 5 * 60 * 1000);
         });
     </script>
